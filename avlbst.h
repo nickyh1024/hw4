@@ -138,8 +138,353 @@ protected:
 
     // Add helper functions here
 
+    void insertFix(AVLNode<Key, Value>* parent, AVLNode<Key, Value>* current); 
+    void removeFix(AVLNode<Key, Value>* current, int diff); 
+    void rotateRight(AVLNode<Key, Value>* node); 
+    void rotateLeft(AVLNode<Key, Value>* node); 
+    AVLNode<Key, Value>* findTallerChild(AVLNode<Key, Value>* n1, AVLNode<Key, Value>* n2); 
+    int height(AVLNode<Key, Value>* node);
+
 
 };
+
+template<class Key, class Value>
+void AVLTree<Key, Value>::insertFix(AVLNode<Key, Value>* parent, AVLNode<Key, Value>* current) {
+    //Pseudocode:
+        //if curr node is null or parent node is null  
+            //return
+        //get grandparent node
+        //if grandparent node is null
+            //return
+        //if parent is left child of grandparent
+            //get grandparent's balance
+            //set grandparent's balance to its current balance - 1
+            //if grandparent's balance is 0 we just return
+            //if grandparent's balance = -1
+                //insertFix(parent, grandparent)
+            //if grandparent's balance is -2
+                //zig-zig case (current node is parent's left child so left-left-left)
+                //zig-zag case (current node is parent's right child so left-left-right)
+                    //if balance of curr node is -1
+                        //do something
+                    //if balance of curr node is 0
+                        //do something
+                    //if balance of curr node is 1
+                        //do something
+        //if parent is right child of grandparent
+            //get grandparent's balance
+            //set grandparent's balance to its current balance + 1
+            //if grandparent's balnce is 0 we just return
+            //if grandparent's balance = -1
+                //insertFix(parent, grandparent)
+            //if grandparent's balance is -2
+                //zig-zig case (current node is parent's right child so right-right-right)
+                //zig-zag case (current node is parent's left child so right-right-left)
+                    //if balance of curr node is -1
+                        //do something
+                    //if balance of curr node is 0
+                        //do something
+                    //if balance of curr node is 1
+                        //do something
+        
+        if (current == nullptr || parent == nullptr) {
+            return; 
+        }
+        AVLNode<Key, Value>* grandparent = parent->getParent();
+        
+        if (grandparent == nullptr) {
+            return; 
+        }
+
+        if (grandparent->getLeft() == parent) {
+            int grandparentBalance = grandparent->getBalance(); 
+            grandparentBalance = grandparentBalance - 1; 
+            //balanced so return
+            if (grandparentBalance == 0) {
+                return; 
+            }
+            //balance off by -1
+            if (grandparentBalance == -1) {
+                insertFix(grandparent, parent);
+            }
+            //balance off by -2
+            if (grandparentBalance == -2) {
+                //zig-zig case 
+                if (parent->getLeft() == current) {
+                    rotateRight(grandparent); 
+                    parent->setBalance(0); 
+                    grandparent->setBalance(0); 
+                }
+                //zig-zag case
+                else if (parent->getRight() == current) {
+                    rotateLeft(parent); 
+                    rotateRight(grandparent); 
+                    //how do you access balance of current?
+                    if (current->getBalance() == -1) {
+                        parent->setBalance(0); 
+                        grandparent->setBalance(1);
+                        current->setBalance(0); 
+                    }
+                    if (current->getBalance() == 0) {
+                        parent->setBalance(0); 
+                        grandparent->setBalance(0); 
+                        current->setBalance(0); 
+                    }
+                    if  (current->getBalance() == 1) {
+                        parent->setBalance(-1); 
+                        grandparent->setBalance(0); 
+                        current->setBalance(0); 
+                    }
+                }
+            }
+        }
+        else if (grandparent->getRight() == parent){
+            int grandparentBalance = grandparent->getBalance(); 
+            grandparentBalance = grandparentBalance + 1; 
+            //balanced so return 
+            if (grandparentsBalance == 0) {
+                return; 
+            }
+            //balalnce off by 1
+            if (grandparentBalance == 1) {
+                insertFix(grandparent, parent); 
+            }
+            //balance off by 2
+            if (grandparentBalance == 2) {
+                //zig-zig case 
+                if (parent->getRight() == current) {
+                    rotateLeft(grandparent); 
+                    parent->setBalance(0); 
+                    grandparent->setBalance(0); 
+                }
+                //zig-zag case
+                if (parent->getLeft() == current) {
+                    rotateRight(parent); 
+                    rotateLeft(grandparent); 
+                    if (current->getBalance() == 1) {
+                        parent->setBalance(0); 
+                        grandparent->setBalance(-1); 
+                        current->setBalance(0);
+                    }
+                    else if (current->getBalance() == 0) {
+                        parent->setBalance(0); 
+                        grandparent->setBalance(0); 
+                        current->setBalance(0); 
+                    }
+                    else if (current->getBalance() == -1) {
+                        parent->setBalance(1); 
+                        grandparent->setBalance(0); 
+                        current->setBalance(0); 
+                    }
+                }
+            }
+        }
+}
+
+template<class Key, class Value>
+void AVLTree<Key, Value>::removeFix(AVLNode<Key, Value>* current, int diff){
+        //p = parent of n
+        //n = current node
+        //c = taller child of n
+        //g = grandchild of n
+        //if n is null, return
+        //compute next recursive call's arguments now before altering the tree
+            //let p = parent(n) and if p is not NULL let ndiff (next diff) = +1 if n is a left child and -1 otherwise
+        //Assume diff = -1 and follow the remainder of this approach, mirroring if diff = +1
+        //Flip for if diff == 2, flipping left/right and -1/+1
+        //Case 1: b(n) + diff == -2
+            //Let c = left(n), the taller of the children
+            //Case 1a: b(c) = -1 //zig-zig case
+                //rotateRight(n), b(n) = b(c) = 0, removeFix(p, ndiff)
+            //Case 1b: b(c) == 0 //zig-zig case
+                //rotateRight(n), b(n) = -1, b(c) = +1 // doesn
+            //Case 1c: b(c) == +1 //zig-zag case
+                //let g = right(c)
+                //rotateLeft(c) then rotateRight(n)
+                //If b(g) was +1 then b(n) = 0, b(c) = -1, b(g) = 0
+                //If  b(g) was 0 then b(n) = 0, b(c) = 0, b(g) = 0
+                //If b(g) was -1 then b(n) = +1, b(c) = 0, b(g) = 0
+                //removeFix(p, ndiff)
+        //Case 2: b(n) + diff == -1
+            //b(n) = -1 DONE 
+        //Case 3: b(n) + diff == 0
+            //b(n) = 0
+            //removeFix(p, ndiff)
+
+
+        if (current == nullptr) {
+            return; 
+        }
+        AVLNode<Key, Value>* parent = current->getParent(); 
+        int ndiff = 0; 
+        //if p is not NULL let ndiff = +1 if n is a left child and -1 otherwise.
+        if (parent != nullptr) {
+            if (current->getLeft() != nullptr) {
+                ndiff = diff + 1; 
+            }
+            else {
+                ndiff = diff - 1; 
+            }
+        }
+
+        //assume diff = -1 and follow the remainder of the approach
+        if (diff = 1) {
+            //Case 1: b(n) + diff == -2
+            if (current->getBalance() + diff == 2) {
+                AVLNode<Key, Value>* child = findTallerChild(current->getRight(), current->getLeft());
+                //Case 1a: b(c) == 1, zig-zig case
+                if (child->getBalance() == 1) {
+                    rotateLeft(current);
+                    current->setBalance(0);
+                    child->setBalance(0);
+                    removeFix(parent, ndiff); 
+                }
+                //Case 1b
+                else if (child->getBalance() == 0) {
+                    rotateLeft(current); 
+                    current->setBalance(1);
+                    child->setBalance(-1); 
+                }
+                //Case 1c
+                else if (child->getBalance() == -1) {
+                    AVLNode<Key, Value>* grandparent = child->getLeft(); 
+                    rotateRight(child); 
+                    rotateLeft(current); 
+                    if (grandparent->getBalance() == -1) {
+                        current->setBalance(0);
+                        child->setBalance(1);
+                        grandparent->setBalance(0);
+                    }
+                    else if (grandparent->getBalance() == 0) {
+                        current->setBalance(0); 
+                        chlid->setBalance(0);
+                        grandparent->setBalance(0);
+                    }
+                    else if (grandparent->getBalance() == 1) {
+                        current->setBalance(-1); 
+                        child->setBalance(0);
+                        grandparent->setBalance(0); 
+                    }
+                    removeFix(parent, ndiff); 
+                }
+            }
+            //Case 2: b(n) + diff = 1
+            else if (current->getBalance() + diff == 1) {
+                current->setBalance(1);
+            }
+            //Case 3: b(n) + diff == 0
+            else if (current->getBalance() + diff == 0) {
+                current->setBalance(0); 
+                remove_fix(parent, ndiff); 
+            }
+        }
+        else if (diff = -1) {
+            //Case 1: b(n) + diff == -2
+            if (current->getBalance() + diff == -2) {
+                //let child = the taller of the children
+                AVLNode<Key, Value>* child = findTallerChild(current->getRight(), current->getLeft()); 
+                //Case 1a: b(c) == -1, zig-zig case
+                if (child->getBalance() == -1) {
+                    rotateRight(current); 
+                    current->setBalance(0);
+                    child->setBalance(0);
+                    removeFix(parent, ndiff); 
+                }
+                //Case 1b: b(c) == 0, zig-zig still
+                else if (child->getBalance() == 0) {
+                    rotateRight(current); 
+                    current->setBalance(-1); 
+                    child->setBalance(1); 
+                }
+                //Case 1c: b(c) == 1, zig-zag case
+                else if (child->getBalance() == 1) {
+                    AVLNode<Key, Value>* grandparent = child->getRight(); 
+                    rotateLeft(child);
+                    rotateRight(current);
+                    if (grandparent->getBalance() == 1) {
+                        current->setBalance(0); 
+                        child->setBalance(-1);
+                        grandparent->setBalance(0);
+                    }
+                    else if (grandparent->getBalance() == 0) {
+                        current->setBalance(0);
+                        child->setBalance(0);
+                        grandparent->setBalance(0);
+                    }
+                    else if (grandparent->getBalance() == -1) {
+                        current->setBalance(1);
+                        child->setBalance(0);
+                        grandparent->setBalance(0);
+                    }
+                    removeFix(parent, ndiff); 
+                }
+            }
+            //Case 2: b(n) + diff == -1
+            else if (current->getBalance() + diff == -1) {
+                current->setBalance(-1);
+            }
+            //Case 3: b(n) + diff == 0
+            else if (current->getBalance() + diff == 0) {
+                current->setBalance(0);
+                removeFix(parent, ndiff);
+            }
+        }
+
+    
+}
+
+template<class Key, class Value>
+AVLNode<Key, Value>* AVLTree<Key, Value>::findTallerChild(AVLNode<Key, Value>* n1, AVLNode<Key, Value>* n2) {
+    int height1 = height(n1); 
+    int height2 = height(n2);
+    
+    if (height1 < height2) {
+        return n2; 
+    }
+    else if (height1 > height2) {
+        return n1; 
+    }
+    else {
+        //if equal just return either?
+        return n1; 
+    }
+}
+
+template<class Key, class Value>
+int AVLTree<Key, Value>::height(AVLNode<Key, Value>* node) {
+    if (node == nullptr) {
+        return 0; 
+    }
+    else {
+        int leftHeight = height(node->getLeft());
+        int rightHeight = height(node->getRight());
+        return 1 + std::max(leftHeight, rightHeight);
+    }
+}
+
+template<class Key, class Value>
+void AVLTree<Key, Value>::rotateRight(AVLNode<Key, Value>* node){
+    //6 pointer changes to implement rotations:
+        // 1. parent's child
+        // 2. current's parent
+        // 3. current's child
+        // 4. child's parent
+        // 5. child's child's parent pointer
+        // 6. child's right child pointer
+
+    //if node doesn't exist
+    if (node == nullptr) {
+        return;
+    }
+
+    //declare and set parent and child nodes
+    AVLNode<Key, Value>* 
+}
+
+template<class Key, class Value>
+void AVLTree<Key, Value>::rotateLeft(AVLNode<Key, Value>* node) {
+
+}
 
 /*
  * Recall: If key is already in the tree, you should 
@@ -149,6 +494,125 @@ template<class Key, class Value>
 void AVLTree<Key, Value>::insert (const std::pair<const Key, Value> &new_item)
 {
     // TODO
+    //Pseduocode:
+        //Use internal find to get node_to_insert... do you need to do this?
+        //If node_to_insert is equal to null pointer ...do you need to do this?
+            //return ...do you need to do this?
+        //empty tree case
+            //insert into the tree, steps:
+                //dynamically create new node
+                //setbalance equal to 0
+                //make root pointer equal to new node
+                //set child pointers of node possilby to node?
+                    //check node class and see what variables are associated, specifically which one i need to set
+        //get current node by getting the root
+        //while current node is not null
+            //if node_to_insert key > current key, insert right 
+                //if current->getRight() is null, insert node_to_insert as current keys right child
+                    //dynamically create new ndoe 
+                    //setbalance of new node to 0
+                    //update current's right child to new node (the dynamically created one)
+                    //update the balance
+                    //save the parent's current balance to a variable 
+                    //if balance is -1
+                        //set current node balance to 0
+                        //return becuase balanced
+                    //if balance is 0
+                        //set current node balance to 1 (because right child )
+                        //call insertFix(new node, current node)
+                        //return
+                //if current->getRight() is not null
+                    //current = current->getRight()
+            //if node_to_insert key < current key, insert left
+                //if current->getLeft is null (meaning you insert node_to insert as current keys left child)
+                    //dynamically create new node
+                    //setbalance of new node to 0
+                    //Update current's left child to new node (the dynamically created one)
+                    //Update balance
+                    //Save the parent's current balance to a vaariable
+                    //If balance is 1
+                        //Set current node balance to 0
+                        //Return because balanced
+                    //if balance is 0
+                        //set current node balance to -1
+                        //call InsertFix(new node, current node)
+                        //return
+                //if current->getLeft() is not null
+                    //current = current->getLeft()
+            //if node_to_insert key == current key  
+                //override value with node to insert's value
+                //return
+
+
+    //empty tree case
+    if (root_ == nullptr) {
+        AVLNode<Key, Value>* newNode = new AVLNode<Key, Value>(new_item.first, new_item.second, nullptr); 
+        newNode->setBalance(0); 
+        root_ = newNode;
+        newNode->setRight(nullptr);
+        newNode->setLeft(nullptr); 
+    }
+
+    //get current node to iterate through tree
+    AVLNode<Key, Value>* current = root_; 
+    while (current != nullptr) {
+        //go the right if node we are inserting is greater than current's key
+        if (new_item.first > current->getKey()) {
+            //insert it as current key's right child because there is empty slot
+            if (current->getRight() == nullptr) {
+                AVLNode<Key, Value>* newNode = new AVLNode<Key, Value>(new_item.first, new_item.second, nullptr);
+                newNode->setBalance(0); 
+                current->setRight(newNode); 
+                //dealing with balance
+                int balance = current->getBalance(); 
+                //if balance is -1 before right child, just set balance to 0 because right child would make balanace 0
+                if (balance == -1) {
+                    current->setBalance(0); 
+                    return; 
+                }
+                //if balance is 0 before right child, need to call insertFix
+                if (balance == 0) {
+                    current->setBalance(1); 
+                    insertFix(current, newNode); 
+                    return; 
+                }
+            }
+            //keep going right to find a spot if getRight is occupied 
+            if (current->getRight() != nullptr) {
+                current = current->getRight(); 
+            }
+        }
+        //go to the left if node we are inserting is less than current's key
+        if (new_item.first < current->getKey()) {
+            //do the same thing as going to the right, but balance and getLeft() changes
+            if (current->getLeft() == nullptr){
+                AVLNode<Key, Value>* newNode = new AVLNode<Key, Value>(new_item.first, new_item.second, nullptr); 
+                newNode->setBalance(0); 
+                current->setRight(newNode); 
+                //dealing with balance
+                int balance = current->getBalance(); 
+                //if balance is 1 before left child, just set balance to 0 because left child would add a -1
+                if (balance == 1) {
+                    current->setBalance(0);
+                    return; 
+                }
+                //if balance is 0 before left child, need to call insertFix
+                if (balance == 0) {
+                    current->setBalance(-1); 
+                    insertFix(current, newNode); 
+                    return; 
+                }
+            }
+            if (current->getLeft() != nullptr) {
+                current = current->getLeft(); 
+            }
+        }
+        if (new_item.first == current->getKey()) {
+            current->setValue(new_item.second);
+            return; 
+        }
+    }
+
 }
 
 /*
@@ -159,6 +623,126 @@ template<class Key, class Value>
 void AVLTree<Key, Value>:: remove(const Key& key)
 {
     // TODO
+    //Pseudocode:
+        //Use internalFind to find the node_to_delete
+        //node_to_delete is empty 
+            //return
+        //if node_to_delete has two children
+            //get the predecessor of node_to_delete
+            //swap positions
+        //if node_to_delete has one child
+            //create parent node, left child, and right child of node_to_delete
+            //Create the difference variable
+            //if node_to_delete has no parents
+                //if right is the one to exist
+                    //make right child the root pointer
+                    //right child parent pointer to null
+                //if left is the one to exist
+                    //make left child the root pointer
+                    //left child parent pointer to null
+            //if node_to_delete has parents
+                //if parent's left child is our node_to_delete
+                    //set difference = difference + 1
+                    //if node_to_delete has right child
+                        //parent's left child pointer points to node_to_delete's right child
+                        //node_to_delete's right child parent pointer points to the left parent (grandparent node)
+                    //if node_to_delete has left child
+                        //parent's left child pointer points to node_to_delete's left child
+                        //node_to_delete's left child parent pointer points to the left parent (grandparent node)
+                //if parent's right child is our node_to_delete
+                    //set difference = difference - 1
+                    //If node_to_delete has right child
+                        //Parent's right child pointer points to node_to_delete's right child
+                        //node_to_delete's right child parent pointer points to the right parent (grandparent node)
+                    //If node_to_delete has left child
+                        //Parent's right child pointer points to node_to_delete's left child
+                        //node_to_delete's left child's parent pointer points to right parent (grandparent node)
+            //Delete node_to_delete
+        //if node_to_delete has zero children
+            //if node has no parent 
+                //make root equal to null ptr
+            //if node has parent
+                //if parent is a left parent
+                    //parent's left child pointer point to null
+                    //set difference = difference + 1
+                //if parent is a right parent
+                    //parent's right child pointer points to null
+                    //set difference = different - 1
+        //call removeFix(parent, diff)
+        
+        //find the nodeToDelete
+        int diff = 0; 
+        AVLNode<Key, Value>* nodeToDelete = internalFind(key);
+        if (nodeToDelete == nullptr) {
+            return; 
+        }
+
+        //2 child case
+        if (nodeToDelete->getLeft() != nullptr && nodeToDelete->getRight() != nullptr) {
+            //find predecessor and swap
+            AVLNode<Key, Value>* pred = predecessor(nodeToDelete); 
+            if (pred != nullptr) {
+                nodeSwap(nodeToDelete, pred);
+            }
+        }
+
+        //1 child case
+        AVLNode<Key, Value>* child = nullptr; 
+        //determine if left child or right child for 1 child case
+        if (nodeToDelete->getLeft() != nullptr){
+            child = nodeToDelete->getLeft();
+        }
+        else if (nodeToDelete->getRight() != nullptr) {
+            child = nodeToDelete->getRight(); 
+        }
+
+        AVLNode<Key, Value>* parent = nodeToDelete->getParent();
+        if (child != nullptr) {
+            //if node_to_delete has no parents 
+            if (nodeToDelete == root_) {
+                //make child the root, and root point at the child
+                root_ = child; 
+                child->setParent(nullptr); 
+            }
+            //if node_to_delete has parents
+            else {
+                //node_to_delete's child is pointing at node_to_delete's parent
+                child->setParent(parent); 
+                if (parent->getLeft() == nodeToDelete){
+                    diff = 1; 
+                    parent->setLeft(child); 
+                }
+                else {
+                    diff = -1; 
+                    parent->setRight(child); 
+                }
+            }
+        }
+        
+        //0 child case
+        else {
+            //if no parents
+            if (nodeToDelete == root_){
+                root_ = nullptr; 
+            }
+
+            //if has parents
+            else {
+                //check left or right parent
+                if (parent->getLeft() != nullptr) {
+                    parent->setLeft(nullptr); 
+                    diff = 1; 
+                }
+                else {
+                    parent->setRight(nullptr); 
+                    diff = -1; 
+                }
+            }
+        }
+
+        //delete node after pointers should all be in the right spots
+        delete nodeToDelete; 
+        removeFix(parent, diff); 
 }
 
 template<class Key, class Value>
