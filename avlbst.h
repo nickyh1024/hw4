@@ -621,6 +621,7 @@ void AVLTree<Key, Value>::rotateLeft(AVLNode<Key, Value>* node) {
         child->setParent(parent); 
     }
 
+
     //5. child's child's parent pointer
     if (child->getLeft() != nullptr) {
         child->getLeft()->setParent(node);
@@ -705,7 +706,8 @@ void AVLTree<Key, Value>::insert (const std::pair<const Key, Value> &new_item)
 
     //empty tree case
     if (this->root_ == nullptr) {
-        this->root_ = new AVLNode<Key, Value>(new_item.first, new_item.second, nullptr); 
+        AVLNode<Key,Value>* newNode = new AVLNode<Key, Value>(new_item.first, new_item.second, nullptr); 
+        this->root_ = newNode;
         static_cast<AVLNode<Key,Value>*>(this->root_)->setBalance(0); 
         return;
     }
@@ -714,7 +716,7 @@ void AVLTree<Key, Value>::insert (const std::pair<const Key, Value> &new_item)
         AVLNode<Key, Value>* parent = nullptr; 
         
         
-        //traverse to find spot
+        //traverse to find a parent for the newnode
         while (current != nullptr) {
             parent = current; 
 
@@ -732,6 +734,7 @@ void AVLTree<Key, Value>::insert (const std::pair<const Key, Value> &new_item)
                 return;
             }
         }
+
         AVLNode<Key, Value>* newNode = new AVLNode<Key, Value>(new_item.first, new_item.second, parent);
         //insert new node into location we found
         if (new_item.first < parent->getKey()) {
@@ -744,9 +747,11 @@ void AVLTree<Key, Value>::insert (const std::pair<const Key, Value> &new_item)
 
         if (parent->getBalance() == -1) {
             parent->setBalance(0);
+            return;
         }
         else if (parent->getBalance() == 1) {
             parent->setBalance(0);
+            return;
         }
         else if (parent->getBalance() == 0) {
             if (parent == nullptr){
@@ -771,6 +776,7 @@ void AVLTree<Key, Value>:: remove(const Key& key)
     // TODO
     //Pseudocode:
         //Use internalFind to find the node_to_delete
+        //but no access to internalFind
         //node_to_delete is empty 
             //return
         //if node_to_delete has two children
