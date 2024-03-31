@@ -811,7 +811,7 @@ int BinarySearchTree<Key, Value>::balanceHelper(Node<Key, Value>* node) const {
   //empty but it means it is balanced
   if (node == nullptr) {
     return 0; 
-  }
+  } 
 
   //check left subtree for the height and the balanced
   int leftHeight = balanceHelper(node->getLeft()); 
